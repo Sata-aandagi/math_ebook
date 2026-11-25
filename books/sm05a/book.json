@@ -1,0 +1,458 @@
+{
+  "id": "sm05a",
+  "form": "S5",
+  "code": "SM05 (A)",
+  "title": "More about Polynomials",
+  "topic": "More about Polynomials",
+  "year": 2026,
+  "status": "live",
+  "storage": "sm05a",
+  "widgets": false,
+  "source": {
+    "que": "source/SM05 (A) More about Polynomials (2026) (QUE).pdf",
+    "ans": "source/SM05 (A) More about Polynomials (2026) (ANS).pdf",
+    "ansPageOffset": -1
+  },
+  "sections": [
+    {
+      "id": "ld",
+      "label": "Long Division"
+    },
+    {
+      "id": "da",
+      "label": "Division Algorithm"
+    },
+    {
+      "id": "rt",
+      "label": "Remainder Theorem"
+    },
+    {
+      "id": "ch",
+      "label": "Challenge"
+    }
+  ],
+  "continuation": {
+    "top": 96,
+    "x": 48,
+    "width": 499,
+    "bottom": 812
+  },
+  "extract": {
+    "zoom": 3,
+    "regionX": [
+      66,
+      546
+    ],
+    "footer": 786,
+    "questions": [
+      {
+        "id": "p1",
+        "page": 2,
+        "label": "Practice 1",
+        "section": "ld"
+      },
+      {
+        "id": "q1",
+        "page": 3,
+        "label": "1",
+        "section": "ld"
+      },
+      {
+        "id": "q2",
+        "page": 3,
+        "label": "2",
+        "section": "ld"
+      },
+      {
+        "id": "q3",
+        "page": 3,
+        "label": "3",
+        "section": "ld"
+      },
+      {
+        "id": "q4",
+        "page": 3,
+        "label": "4",
+        "section": "ld"
+      },
+      {
+        "id": "q5",
+        "page": 4,
+        "label": "5",
+        "section": "ld"
+      },
+      {
+        "id": "q6",
+        "page": 4,
+        "label": "6",
+        "section": "ld"
+      },
+      {
+        "id": "q7",
+        "page": 4,
+        "label": "7",
+        "section": "ch"
+      },
+      {
+        "id": "ex2",
+        "page": 5,
+        "label": "Example 2",
+        "section": "da"
+      },
+      {
+        "id": "p2",
+        "page": 6,
+        "label": "Practice 2",
+        "section": "da"
+      },
+      {
+        "id": "p3",
+        "page": 6,
+        "label": "Practice 3",
+        "section": "da"
+      },
+      {
+        "id": "q8",
+        "page": 6,
+        "label": "8",
+        "section": "da"
+      },
+      {
+        "id": "q9",
+        "page": 6,
+        "label": "9",
+        "section": "da"
+      },
+      {
+        "id": "q10",
+        "page": 7,
+        "label": "10",
+        "section": "da"
+      },
+      {
+        "id": "q11",
+        "page": 7,
+        "label": "11",
+        "section": "da"
+      },
+      {
+        "id": "q12",
+        "page": 7,
+        "label": "12",
+        "section": "da"
+      },
+      {
+        "id": "q13",
+        "page": 8,
+        "label": "13",
+        "section": "da"
+      },
+      {
+        "id": "q14",
+        "page": 8,
+        "label": "14",
+        "section": "da"
+      },
+      {
+        "id": "q15",
+        "page": 8,
+        "label": "15",
+        "section": "da"
+      },
+      {
+        "id": "q16",
+        "page": 8,
+        "label": "16",
+        "section": "da"
+      },
+      {
+        "id": "p3a",
+        "page": 10,
+        "label": "Practice 3a",
+        "section": "rt"
+      },
+      {
+        "id": "p3b",
+        "page": 10,
+        "label": "Practice 3b",
+        "section": "rt"
+      },
+      {
+        "id": "q17",
+        "page": 11,
+        "label": "17",
+        "section": "rt"
+      },
+      {
+        "id": "q18",
+        "page": 11,
+        "label": "18",
+        "section": "rt"
+      },
+      {
+        "id": "q19",
+        "page": 11,
+        "label": "19",
+        "section": "rt"
+      },
+      {
+        "id": "q20",
+        "page": 12,
+        "label": "20",
+        "section": "rt"
+      },
+      {
+        "id": "q22",
+        "page": 12,
+        "label": "22",
+        "section": "rt"
+      },
+      {
+        "id": "q23",
+        "page": 12,
+        "label": "23",
+        "section": "rt"
+      },
+      {
+        "id": "q24",
+        "page": 13,
+        "label": "24",
+        "section": "rt"
+      },
+      {
+        "id": "q25",
+        "page": 13,
+        "label": "25",
+        "section": "rt"
+      },
+      {
+        "id": "q26",
+        "page": 13,
+        "label": "26",
+        "section": "rt"
+      },
+      {
+        "id": "q27",
+        "page": 14,
+        "label": "27",
+        "section": "rt"
+      },
+      {
+        "id": "q28",
+        "page": 14,
+        "label": "28",
+        "section": "rt"
+      },
+      {
+        "id": "q29",
+        "page": 14,
+        "label": "29",
+        "section": "rt"
+      },
+      {
+        "id": "q30",
+        "page": 15,
+        "label": "30",
+        "section": "ch"
+      }
+    ],
+    "anchors": {
+      "p1": "Practice\\s*1:",
+      "ex2": "Example\\s*2:",
+      "p2": "Practice\\s*2:",
+      "p3": "Practice\\s*3:",
+      "p3a": "Practice\\s*3a:",
+      "p3b": "Practice\\s*3b:"
+    },
+    "fixedAnchors": {},
+    "overrides": {
+      "p3b": {
+        "region": [
+          140,
+          437,
+          512,
+          782
+        ],
+        "square": [
+          522.3,
+          518.8,
+          549.2,
+          545.6
+        ],
+        "space": 90
+      },
+      "q24": {
+        "region": [
+          140,
+          113,
+          512,
+          308
+        ],
+        "square": [
+          525.7,
+          224.6,
+          551.8,
+          250.6
+        ],
+        "space": 16
+      },
+      "q25": {
+        "region": [
+          140,
+          336,
+          512,
+          529
+        ],
+        "square": [
+          525.7,
+          466.0,
+          551.8,
+          492.0
+        ],
+        "space": 17
+      },
+      "q26": {
+        "region": [
+          140,
+          575,
+          512,
+          782
+        ],
+        "square": [
+          525.7,
+          686.6,
+          551.8,
+          712.6
+        ]
+      },
+      "q27": {
+        "region": [
+          140,
+          113,
+          512,
+          288
+        ],
+        "square": [
+          525.7,
+          224.6,
+          551.8,
+          250.6
+        ],
+        "space": 49
+      },
+      "q28": {
+        "region": [
+          140,
+          334,
+          512,
+          494
+        ],
+        "square": [
+          525.7,
+          445.9,
+          551.8,
+          471.9
+        ],
+        "space": 64
+      },
+      "q29": {
+        "region": [
+          140,
+          540,
+          512,
+          782
+        ],
+        "square": [
+          525.7,
+          651.6,
+          551.8,
+          677.7
+        ],
+        "space": 240
+      },
+      "q30": {
+        "region": [
+          140,
+          149,
+          512,
+          782
+        ],
+        "square": [
+          525.7,
+          260.6,
+          551.8,
+          286.6
+        ]
+      },
+      "q22": {
+        "space": 230
+      },
+      "q20": {
+        "space": 75
+      },
+      "q17": {
+        "space": 190
+      },
+      "q18": {
+        "space": 190
+      },
+      "q12": {
+        "space": 240
+      },
+      "q23": {
+        "space": 180
+      },
+      "p1": {
+        "space": 110
+      },
+      "q1": {
+        "space": 85
+      },
+      "q7": {
+        "space": 170
+      },
+      "p2": {
+        "space": 45
+      },
+      "p3": {
+        "space": 100
+      },
+      "q9": {
+        "space": 70
+      },
+      "q11": {
+        "space": 85
+      },
+      "q13": {
+        "space": 60
+      },
+      "q14": {
+        "space": 70
+      },
+      "q15": {
+        "space": 120
+      },
+      "q16": {
+        "space": 115
+      },
+      "q2": {
+        "space": 70
+      },
+      "q4": {
+        "space": 25
+      },
+      "q5": {
+        "space": 40
+      },
+      "q10": {
+        "space": 70
+      },
+      "q6": {
+        "space": 140
+      },
+      "q19": {
+        "space": 8
+      }
+    }
+  }
+}
