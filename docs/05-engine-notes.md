@@ -98,6 +98,24 @@ its own copy only as the offline fallback. What the old behaviour looked like (t
 - `release_probe` poisons `media.js` and `styles.css` in the worker's cache on purpose and reloads:
   the network copies must win (the scrubber exists and is styled `z-index: 5`).
 
+**The worker does not call `clients.claim()`.** A worker that claims a page which is already open tears
+that page's in-flight requests down: on a **first visit** the teacher pressed play and the clip went
+`error → abort → emptied → loadstart`, the loader swapped in the plain url and the video restarted at
+0 s (2026-11-27; visits 2 and 3 were fine because the worker was already in control). So the worker
+serves the **next navigation** instead — a first visit is answered by the network end to end, and the
+data urls are versioned anyway. Consequence to remember: the cache fills from the second load, not the
+first.
+
+`loadVideo` also keeps its place across a fallback: it remembers the position (`timeupdate`) and
+whether the viewer had asked for play, and on `loadedmetadata` after the swap it restores
+`currentTime` and resumes if it was playing. Every media error is logged once with
+`MediaError.code`/`message` — or the fact that there is **no** `MediaError`, which is what an aborted
+request looks like.
+
+`release_probe` opens the book in a **brand-new profile** (nothing installed) and presses play: after
+3.6 s the clip must be at `currentTime > 2`, playing, with no `abort` event and its `?v=` url intact.
+That is the first-visit case the teacher hit.
+
 ## Ink and Apple Pencil: lessons learned
 
 These cost real debugging time on JM26 (B). Keep them in mind when touching `engine/ink/` or the pointer code in `app.js`:

@@ -69,7 +69,10 @@ deliberately **stuck, cache-first service worker** whose cache already holds an 
   clip (the plain one is what the offline fallback asks for), and the app's worker replaces
   the stuck one;
 - with the server **closed**, the book still opens, page 2 still shows the panel and the
-  clip, and the clip still plays from the cache.
+  clip, and the clip still plays from the cache;
+- in a **brand-new profile** (a separate browser, nothing installed) the first visit presses play and
+  must still be playing at > 2 s with no `abort` event and its versioned url — the worker no longer
+  claims the page mid-playback.
 
 ### 2.2 Solution-guide clips
 

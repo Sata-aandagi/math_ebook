@@ -1,7 +1,7 @@
 // Bump on every release so iPads drop the old copy (docs/04-qa-and-release.md).
 // This is also the version every book data url carries: engine/book.js reads it
 // back out of this file, so a release cannot be answered by an older cache.
-const CACHE = "ebooks-v73";
+const CACHE = "ebooks-v74";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -15,10 +15,13 @@ self.addEventListener("activate", (event) => {
       /* allSettled, not all: a delete can reject (it races a read in a page that
          is still loading, or hits a quota error), and one rejected delete would
          cancel the rest and reject activate, leaving this worker's housekeeping
-         half done. Claiming clients comes after the deletes so a page that is
-         already open is served by this release, not by the one being removed. */
+         half done. */
       await Promise.allSettled(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
-      await self.clients.claim();
+      /* NO clients.claim(). Taking over a page that is already open tears its
+         in-flight requests down — on the very first visit the teacher pressed
+         play and the clip went error → abort → emptied → src fallback, back to
+         0 s. The worker serves the NEXT navigation instead; a first visit is
+         answered by the network (the data urls are versioned anyway). */
     })()
   );
 });

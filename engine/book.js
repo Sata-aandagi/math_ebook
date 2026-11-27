@@ -112,15 +112,33 @@ export function loadImage(img, path, onFail) {
 /** Per-element state for loadVideo, which may be pointed at another clip later. */
 const videos = new WeakMap();
 
-/** A `<video>` and its poster: same one-shot fallback, one error listener ever. */
+/**
+ * A `<video>` and its poster: one-shot fallback to the plain url, and it keeps its
+ * place. A resource that dies mid-playback is replaced and then resumed at the
+ * second it had reached — the first visit used to press play, lose the resource
+ * to a worker taking the page over (error → abort → emptied) and restart at 0.
+ */
 export function loadVideo(video, path, poster, onFail) {
-  const state = videos.get(video) || { tries: 0 };
+  const state = videos.get(video) || { tries: 0, at: 0, wantPlay: false };
   if (!videos.has(video)) {
     videos.set(video, state);
+    // What the viewer last had: the position (timeupdate) and whether they had
+    // asked for play. An abort resets both without telling us first.
+    video.addEventListener("timeupdate", () => { if (!state.swapping) state.at = video.currentTime; });
+    video.addEventListener("play", () => { state.wantPlay = true; });
+    video.addEventListener("pause", () => { if (!state.swapping) state.wantPlay = false; });
     video.addEventListener("error", () => {
+      const err = video.error;
+      console.info(`[book] ${state.url} failed` +
+        (err ? ` (MediaError ${err.code}: ${err.message || "no message"})` : " (no MediaError — the request was aborted)"));
       if (state.tries === 0) {
         state.tries = 1;
-        console.info(`[book] ${state.url} failed; retrying ${state.path}`);
+        state.resume = {
+          at: Math.max(state.at || 0, video.currentTime || 0),
+          playing: state.wantPlay || !video.paused,
+        };
+        state.swapping = true;
+        console.info(`[book] retrying ${state.path} at ${state.resume.at.toFixed(2)} s${state.resume.playing ? ", still playing" : ""}`);
         if (state.poster) video.poster = state.poster;
         video.src = state.path;
         return;
@@ -128,8 +146,19 @@ export function loadVideo(video, path, poster, onFail) {
       console.info(`[book] ${state.path} failed for good`);
       if (state.onFail) state.onFail(video);
     });
+    video.addEventListener("loadedmetadata", () => {
+      const resume = state.resume;
+      if (!resume) return;
+      state.resume = null;
+      state.swapping = false;
+      if (resume.at > 0 && Number.isFinite(video.duration)) {
+        video.currentTime = Math.min(resume.at, Math.max(0, video.duration - 0.05));
+      }
+      state.at = video.currentTime;
+      if (resume.playing) video.play().catch(() => {});
+    });
   }
-  Object.assign(state, { tries: 0, path, url: versioned(path), poster: poster ? versioned(poster) : "", onFail });
+  Object.assign(state, { tries: 0, at: 0, wantPlay: false, resume: null, swapping: false, path, url: versioned(path), poster: poster ? versioned(poster) : "", onFail });
   video.poster = state.poster;
   video.src = state.url;
   return video;
