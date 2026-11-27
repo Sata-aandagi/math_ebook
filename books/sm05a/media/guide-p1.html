@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SM05 (A) — Practice 1 solution (inline)</title>
+<!--
+  The stage behind books/sm05a/media/guide-p1.mp4.
+
+  It is sized to the answer space inside the printed frame — 526.5 × 268.7 pt,
+  the region in layout.json and book.json — at 1600 × 816 px (H.264 needs even
+  dimensions; 526.5/268.7 = 1.9594 against 1600/816 = 1.9608, a 0.07 % skew
+  that is under one displayed pixel). The printed frame's top belt is the two
+  question lines (y 483.9–515.9 pt in layout.json), so the region starts just
+  under them and ends just above the frame's bottom rule: the panel never covers
+  a word of the question.
+
+  The frame shows the two parts as the answer sheet does — (a) on the left,
+  (b) on the right on the same top line, each label above its division and each
+  division followed by its own conclusion — all at the book's own type: the
+  KaTeX comes from SOLUTIONS in ../solutions.js, is set at .abox metrics
+  (12.5 px serif, KaTeX 1.04em) and is scaled by WIDTH/526.5 px per page point,
+  which puts 12.5 pt of book type on 38 px of video at 1:1. Nothing is scaled:
+  the stage is the frame from the first frame to the last, so the last frame is
+  the typed answer at the size the reader would set it.
+
+  The device (the teacher's): every operation highlights all the terms it uses,
+  at the same moment —
+    DIVIDE   the working row's leading term + the divisor's leading term + the
+             new quotient term (which lands as it is highlighted);
+    MULTIPLY the divisor's leading term + the quotient term + the product row;
+    SUBTRACT no callout: the product row is bracketed in place with a red minus
+             and the working row, the product row and the result light together;
+    BRING DOWN the whole intact tail at once, with downward arrows to the terms
+             it lands on (and then no separate +28 step).
+  A missing power that the key writes as a 0 coefficient is introduced by a
+  standalone remark (b, before the division, and once more between the first
+  MULTIPLY and SUBTRACT): during a remark nothing else is lit or spoken.
+
+  Where a callout goes (teacher, 2026-11-27): at the lower left of the step it
+  belongs to — its left edge on the left edge of the beat's leftmost highlighted
+  ink, its top 8 pt under the bottom of the beat's lowest row (the rows it
+  highlights and the row it writes), so no part of the box comes closer than
+  8 pt to the step's own ink. It may then sit over anything else — a
+  finished row, the other column, a conclusion — but never over the step itself:
+  guide_audit measures that overlap and it has to be zero. There are no leaders
+  and no arrow heads: the box is the whole pointer. The bring-down keeps its
+  downward arrows from the intact tail to where it lands; its box still has no
+  leader. A box that would leave the frame is slid back inside and the shift is
+  reported; the type is never shrunk for it.
+
+  Both parts sit in one frame: the scene is (a) on the left and (b) on the
+  right, drawn at the book's own 12.5 pt type, 24 pt apart and centred as a
+  pair. While (a) runs the right half is still blank white; when (a) is
+  finished (b) fades in beside it, at the same top line, and its divisions never
+  move the type. Nothing but the two answers is left in the last frame.
+
+  The conclusion sentence is the answer's own t() step, rendered from
+  solutions.js; when it appears, its quotient is tied to the division's
+  quotient row in blue and its remainder to the division's last remainder in
+  green.
+
+  window.GUIDE = { width, height, fps, duration, ready, render(t), audit(), geometry() };
+  Every frame is a pure function of t: no timers, no randomness.
+-->
+<link rel="stylesheet" href="../../../vendor/katex/katex.min.css">
+<style>
+  :root {
+    --ink: #111;
+    --blue: #2456a6;
+    --tint: rgba(255, 199, 52, 0.18);
+    --tint-edge: rgba(190, 130, 0, 0.8);
+    --q-blue: rgba(45, 110, 220, 0.16);
+    --q-blue-edge: rgba(31, 95, 191, 0.85);
+    --r-green: rgba(30, 150, 80, 0.16);
+    --r-green-edge: rgba(20, 125, 66, 0.85);
+    --red: #cf2b2b;
+  }
+  html, body { margin: 0; padding: 0; width: 1600px; height: 816px; overflow: hidden; background: #ffffff; }
+  #stage { position: relative; width: 1600px; height: 816px; background: #ffffff; }
+  #camera { position: absolute; left: 0; top: 0; width: 1600px; height: 816px; }
+  .scene { position: absolute; inset: 0; }
+  .layer { position: absolute; inset: 0; }
+  .part { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  /* The answer's own type: .abox in engine/styles.css. */
+  .inner {
+    transform-origin: 0 0;
+    font-family: "Times New Roman", Times, Tinos, "Liberation Serif", serif;
+    font-size: 12.5px; line-height: 1.32; color: var(--ink); white-space: nowrap;
+  }
+  .inner .katex { font-size: 1.04em; }
+  /* The reader's own line boxes: .ln in engine/styles.css pads 0.06em above and
+     0.5em below (the gutter its review underlines sit in), so a division and the
+     conclusion under it keep exactly the reader's gaps, not a staging gap. */
+  .hd { font-weight: 400; margin: 0 0 0.1em; }
+  .block { padding: 0.06em 0 0.5em; }
+  .concl { margin: 0; padding: 0.06em 0 0.5em; opacity: 0; }
+  .tint {
+    position: absolute; opacity: 0; border-radius: 5px;
+    background: var(--tint); border: 1.4px solid var(--tint-edge);
+  }
+  .tint.blue { background: var(--q-blue); border-color: var(--q-blue-edge); }
+  .tint.green { background: var(--r-green); border-color: var(--r-green-edge); }
+  .callout {
+    position: absolute; opacity: 0; background: #ffffff;
+    border: 2px solid var(--blue); border-radius: 10px;
+    padding: 9px 14px 11px; box-shadow: 0 2px 8px rgba(20, 30, 60, 0.08);
+    width: max-content; max-width: 380px;
+  }
+  .cl-label {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 22px;
+    font: 600 21px/1.05 system-ui, "Segoe UI", Arial, sans-serif;
+    letter-spacing: 0.09em; text-transform: uppercase; color: var(--blue); margin: 0 0 5px;
+  }
+  .cl-step { font-weight: 600; letter-spacing: 0.03em; color: #7794c4; }
+  .cl-math {
+    font-family: "Times New Roman", Times, Tinos, "Liberation Serif", serif;
+    font-size: 32px; line-height: 1.2; color: var(--ink); white-space: nowrap;
+  }
+  /* A remark speaks in the same box as an operation, but it is a sentence, not
+     arithmetic, so it is set in the serif text size and wrapped. */
+  .cl-text { font-family: "Times New Roman", Times, Tinos, "Liberation Serif", serif; font-size: 27px; line-height: 1.3; color: var(--ink); white-space: normal; }
+  /* A remark is a sentence, so it wraps; 352 px keeps it to two or three lines
+     in its own column (a block is 221.7 pt = 674 px wide). */
+  .callout.remark { border-color: #8a6a2f; max-width: 352px; }
+  .callout.remark .cl-label { color: #8a6a2f; }
+  .paren, .minus {
+    position: absolute; opacity: 0; font-family: KaTeX_Main, "Times New Roman", serif;
+    font-size: 52px; line-height: 1; color: #222;
+  }
+  .minus { color: var(--red); font-size: 46px; font-weight: 700; }
+  .wires { position: absolute; left: 0; top: 0; overflow: visible; }
+  .down path { fill: none; stroke: var(--blue); stroke-width: 2.4; stroke-linecap: round; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script src="../../../vendor/katex/katex.min.js"></script>
+<script type="module">
+import { P1_STEPS } from "../solutions.js";
+
+const WIDTH = 1600;
+const HEIGHT = 816;
+const FPS = 30;
+/** The answer space inside the printed frame, in page points (layout.json p1). */
+const REGION_PT = { w: 526.5, h: 268.7 };
+/** Where that region sits on the page (layout.json), for reporting in page pt. */
+const REGION_AT = [36.5, 516.5];
+/** Stage px per page point: the region is 526.5 pt wide and the clip 1600 px. */
+const PT = WIDTH / REGION_PT.w;
+/** Distance between the two blocks, and from the frame's top to their labels. */
+const GAP_PT = 24;
+const TOP_PT = 9;
+/** The callout's top: this far under the bottom of the beat's lowest row, so
+    the vertical distance between the box and the step's own ink is never less
+    than 8 pt (teacher, 2026-11-27: the box must not touch the step). */
+const CAL_GAP_PT = 8;
+const FADE = 0.45;
+const LEAD_IN = 0.9;
+/** Every move — an operation or a remark — holds for one beat: 3 s, entry and
+    exit animation included (teacher, 2026-11-27: 2 s was too quick to read). */
+const BEAT = 3.0;
+/** Where in a beat the terms all light up together, and go out again. */
+const LIGHT = 0.62;
+
+const K = window.katex;
+const SVG_NS = "http://www.w3.org/2000/svg";
+const clamp01 = (x) => Math.max(0, Math.min(1, x));
+const ease = (x) => 1 - (1 - x) ** 3;
+const step = (t, at, dur = 0.3) => ease(clamp01((t - at) / dur));
+const NEVER = Infinity;
+const ALWAYS = -1e7;
+
+const p1 = { boxes: P1_STEPS };
+const divTex = (box) => p1.boxes[box].steps.find((s) => s.m != null).m;
+const conclTex = (box) => p1.boxes[box].steps.find((s) => s.t != null).t;
+
+/* ---------------------------------------------------------------- moves ---
+   One entry per move of the working, in the order the working makes it.
+   `at`     what the move highlights, all at the same moment: [row, a, b] for
+            terms a..b of a row, [row, null, null] for the whole row, or
+            [row, "div"] for the divisor's leading term.
+   `show`   what lands as a result — the same shapes.
+   `tex`    the callout arithmetic, in this question's numbers.
+   `point`  kept from the leader era and no longer used: there are no leaders.
+            SUBTRACT has no callout (the bracket and the red minus are the
+            device) and BRING DOWN's arrows are drawn from the terms themselves.
+   The tail of the dividend is brought down as a whole: (a) -9x+28 together,
+   (b) +5; there is no separate +28 beat, and the result of the next
+   subtraction therefore prints 3x+28.                                       */
+const MOVES = {
+  a: [
+    { kind: "DIVIDE", tex: "4x^{3}\\div x=4x^{2}", at: [[1, 0, 0], [1, "div"], [0, 0, 0]], show: [[0, 0, 0]], point: [0, 0, 0] },
+    { kind: "MULTIPLY", tex: "4x^{2}(x-3)=4x^{3}-12x^{2}", at: [[1, "divall"], [0, 0, 0], [2, null, null]], show: [[2, null, null]], point: [1, "divall"] },
+    { kind: "SUBTRACT", at: [[1, 0, 1], [2, null, null], [3, 0, 0]], show: [[3, 0, 0]], point: null },
+    { kind: "BRINGDOWN", tex: "-9x+28", at: [[1, 2, 3], [3, 1, 2]], show: [[3, 1, 2]], point: null, seat: [1, 2, 3] },
+    { kind: "DIVIDE", tex: "4x^{2}\\div x=4x", at: [[3, 0, 0], [1, "div"], [0, 1, 1]], show: [[0, 1, 1]], point: [0, 1, 1] },
+    { kind: "MULTIPLY", tex: "4x(x-3)=4x^{2}-12x", at: [[1, "divall"], [0, 1, 1], [4, null, null]], show: [[4, null, null]], point: [1, "divall"] },
+    { kind: "SUBTRACT", at: [[3, 0, 2], [4, null, null], [5, 0, 1]], show: [[5, 0, 1]], point: null },
+    { kind: "DIVIDE", tex: "3x\\div x=3", at: [[5, 0, 0], [1, "div"], [0, 2, 2]], show: [[0, 2, 2]], point: [0, 2, 2] },
+    { kind: "MULTIPLY", tex: "3(x-3)=3x-9", at: [[1, "divall"], [0, 2, 2], [6, null, null]], show: [[6, null, null]], point: [1, "divall"] },
+    { kind: "SUBTRACT", at: [[5, 0, 1], [6, null, null], [7, null, null]], show: [[7, null, null]], point: null },
+  ],
+  b: [
+    // The key writes the missing x term as 0x. The remark introduces that 0
+    // before anything is divided, and lights only the 0x it is about.
+    { kind: "REMARK", note: "Give each missing power a 0 coefficient", at: [[1, "div", 1]], show: [] },
+    { kind: "DIVIDE", tex: "-8x^{3}\\div 2x^{2}=-4x", at: [[1, 0, 0], [1, "div"], [0, 0, 0]], show: [[0, 0, 0]], point: [0, 0, 0] },
+    { kind: "MULTIPLY", tex: "-4x(2x^{2}+3)=-8x^{3}-12x", at: [[1, "divall"], [0, 0, 0], [2, null, null]], show: [[2, null, null]], point: [1, "divall"] },
+    // The product's 0x² comes from the divisor's 0x: the remark names both and
+    // nothing else is on screen while it speaks. One sentence (teacher,
+    // 2026-11-27): the longer second half it used to carry said the same thing.
+    { kind: "REMARK", note: "Add a 0 coefficient for missing power", at: [[2, 1, 1], [1, "div", 1]], show: [] },
+    { kind: "SUBTRACT", at: [[1, 0, 2], [2, null, null], [3, 0, 1]], show: [[3, 0, 1]] },
+    { kind: "BRINGDOWN", tex: "+5", at: [[1, 3, 3], [3, 2, 2]], show: [[3, 2, 2]], seat: [1, 3, 3] },
+    { kind: "DIVIDE", tex: "6x^{2}\\div 2x^{2}=3", at: [[3, 0, 0], [1, "div"], [0, 1, 1]], show: [[0, 1, 1]], point: [0, 1, 1] },
+    { kind: "MULTIPLY", tex: "3(2x^{2}+3)=6x^{2}+9", at: [[1, "divall"], [0, 1, 1], [4, null, null]], show: [[4, null, null]], point: [1, "divall"] },
+    { kind: "SUBTRACT", at: [[3, 0, 2], [4, null, null], [5, null, null]], show: [[5, null, null]] },
+  ],
+};
+
+const PARTS = [
+  { key: "a", box: 0, label: "(a)" },
+  { key: "b", box: 1, label: "(b)" },
+];
+const durOf = () => BEAT;
+
+/* -------------------------------------------------------------- the stage --- */
+const stage = document.getElementById("stage");
+/* The two parts are drawn at the book's own size in one scene; the frame is the
+   region at 1:1, so this wrapper is only their container. */
+const camera = el("div", "camera");
+camera.id = "camera";
+stage.append(camera);
+
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/** The answer's t() step: plain text with $…$ set by KaTeX, as the reader does. */
+function inlineHTML(tex) {
+  const out = [];
+  let i = 0;
+  while (i < tex.length) {
+    const a = tex.indexOf("$", i);
+    if (a < 0) { out.push(esc(tex.slice(i))); break; }
+    const b = tex.indexOf("$", a + 1);
+    if (b < 0) { out.push(esc(tex.slice(i))); break; }
+    out.push(esc(tex.slice(i, a)));
+    out.push(K.renderToString(tex.slice(a + 1, b), { throwOnError: false, displayMode: false }));
+    i = b + 1;
+  }
+  return out.join("");
+}
+
+function buildPart(spec) {
+  const scene = el("div", "scene");
+  const behind = el("div", "layer behind");
+  const front = el("div", "layer front");
+  const partEl = el("div", "part");
+  partEl.innerHTML = `<div class="inner"><div class="hd">${spec.label}</div><div class="block"></div><div class="concl"></div></div>`;
+  partEl.querySelector(".block").innerHTML = K.renderToString(`\\displaystyle ${divTex(spec.box)}`, {
+    throwOnError: false,
+    displayMode: false,
+    trust: () => true,
+  });
+  partEl.querySelector(".concl").innerHTML = inlineHTML(conclTex(spec.box));
+  // tints behind the ink, the division, then callouts, brackets and leaders above it
+  scene.append(behind, partEl, front);
+  camera.append(scene);
+  return {
+    ...spec, scene, behind, front, el: partEl,
+    inner: partEl.querySelector(".inner"),
+    concl: partEl.querySelector(".concl"),
+  };
+}
+
+const parts = PARTS.map(buildPart);
+
+function el(tag, cls) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  return node;
+}
+function svgEl(tag, attrs) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v));
+  return node;
+}
+
+/* ------------------------------------------------------------------ geometry ---
+   KaTeX renders an array as one vlist per column; the rows are its children.
+   Within a row every atom is a span. \phantom atoms are drawn in the
+   transparent colour, so the visible atoms are exactly the printed ink.        */
+function rowElements(node) {
+  const col = node.querySelector(".mtable > .col-align-l");
+  return [...col.querySelectorAll(".vlist")]
+    .map((v) => [...v.children].filter((c) => c.querySelector(":scope > .pstrut")))
+    .reduce((a, b) => (b.length > a.length ? b : a), []);
+}
+
+function visibleAtoms(row) {
+  const clear = (node) => /rgba\(0, 0, 0, 0\)|transparent/.test(getComputedStyle(node).color);
+  const shown = (node) => getComputedStyle(node).visibility !== "hidden";
+  const textOf = (node) => {
+    let s = "";
+    const walk = (n) => {
+      if (n.nodeType === 3) { if (n.parentElement && !clear(n.parentElement)) s += n.textContent; return; }
+      if (n.nodeType !== 1 || !shown(n)) return;
+      for (const c of n.childNodes) walk(c);
+    };
+    walk(node);
+    // KaTeX puts a zero-width space in some rules and struts; it is not ink.
+    return s.replace(/[\s\u200b\u200c\u200d\ufeff]/g, "");
+  };
+  const isAtom = (node) => /^m(ord|bin|rel|open|close|op|inner|frac|sqrt|punct|delim)/.test(String(node.className || ""));
+  const out = [];
+  for (const node of row.querySelectorAll("*")) {
+    if (!isAtom(node) || clear(node)) continue;
+    if ([...node.querySelectorAll("*")].some((k) => isAtom(k) && !clear(k) && textOf(k))) continue;
+    const text = textOf(node);
+    const r = node.getBoundingClientRect();
+    if (!text || r.width < 0.01) continue;
+    out.push({ el: node, cls: String(node.className), text, x0: r.left, x1: r.right, cy: (r.top + r.bottom) / 2, top: r.top, bottom: r.bottom });
+  }
+  return out;
+}
+
+/** The visible atoms after the divider's bracket, split at + and −. */
+function groupTerms(atoms) {
+  const terms = [];
+  for (const a of atoms) {
+    if (/^mbin/.test(a.cls) || !terms.length) {
+      terms.push({ atoms: [], text: "", x0: a.x0, x1: a.x1, top: a.top, bottom: a.bottom, cy: a.cy });
+    }
+    const t = terms[terms.length - 1];
+    t.atoms.push(a.el);
+    t.text += a.text;
+    t.x0 = Math.min(t.x0, a.x0);
+    t.x1 = Math.max(t.x1, a.x1);
+    t.top = Math.min(t.top, a.top);
+    t.bottom = Math.max(t.bottom, a.bottom);
+    t.cy = (t.top + t.bottom) / 2;
+  }
+  return terms;
+}
+
+/** A row's terms: what is printed after the bracket (the divisor is before it). */
+function termsFromAtoms(atoms) {
+  const bracket = atoms.findIndex((a) => a.text.includes(")"));
+  return groupTerms(bracket >= 0 ? atoms.slice(bracket + 1) : atoms);
+}
+
+/** The divisor's terms; its first is the leading term the divide acts on. */
+function divisorTerms(atoms) {
+  const bracket = atoms.findIndex((a) => a.text.includes(")"));
+  return groupTerms(bracket >= 0 ? atoms.slice(0, bracket) : atoms);
+}
+
+/** Everything a row actually paints. A KaTeX atom's box is the line strut,
+    about 1.28 em tall, while its glyphs fill ~0.7 em; the band is shrunk to
+    the ink, or two rows' boxes overlap. The rule and bars are 1 px borders.   */
+function shrinkToInk(r) {
+  const h = r.bottom - r.top;
+  return { top: r.top + h * 0.20, bottom: r.bottom - h * 0.18, left: r.left, right: r.right };
+}
+
+function unionRect(list) {
+  if (!list.length) return null;
+  let box = null;
+  for (const r of list) {
+    box = box
+      ? { top: Math.min(box.top, r.top), bottom: Math.max(box.bottom, r.bottom), left: Math.min(box.left, r.left), right: Math.max(box.right, r.right) }
+      : { top: r.top, bottom: r.bottom, left: r.left, right: r.right };
+  }
+  return box;
+}
+
+/** Every separate piece of a row's ink: atoms, the rule and each bar. */
+function atomInkRects(row, atoms) {
+  const out = [];
+  for (const a of atoms) {
+    // A delimiter (`\Big)`) fills nearly the whole of its box; shrinking it like
+    // an ordinary atom would hide the bracket's tail from the lane check.
+    const delim = /delim/.test(a.cls) || a.text === ")" || a.text === "(";
+    out.push(delim
+      ? { top: a.top, bottom: a.bottom, left: a.x0, right: a.x1 }
+      : shrinkToInk({ top: a.top, bottom: a.bottom, left: a.x0, right: a.x1 }));
+  }
+  for (const line of row.querySelectorAll(".underline-line, .overline-line")) {
+    const r = line.getBoundingClientRect();
+    if (r.width > 0.5 && r.height > 0) out.push({ top: r.bottom - 2, bottom: r.bottom, left: r.left, right: r.right, bar: true });
+  }
+  return out;
+}
+
+function inkRectOf(row, atoms) {
+  return unionRect(atomInkRects(row, atoms));
+}
+
+function termsBox(terms) {
+  if (!terms.length) return null;
+  const x0 = Math.min(...terms.map((t) => t.x0));
+  const x1 = Math.max(...terms.map((t) => t.x1));
+  const top = Math.min(...terms.map((t) => t.top));
+  const bottom = Math.max(...terms.map((t) => t.bottom));
+  return { x0, x1, top, bottom, cy: (top + bottom) / 2 };
+}
+
+function rectFor(part, spec) {
+  const [row, a, b] = spec;
+  if (a === "div") return b == null ? part.divLead : termsBox(part.divTerms.slice(b, b + 1));
+  if (a === "divall") return termsBox(part.divTerms);
+  const terms = part.terms[row];
+  if (a == null) return termsBox(terms);
+  return termsBox(terms.slice(a, b + 1));
+}
+
+function textFor(part, spec) {
+  const [row, a, b] = spec;
+  if (a === "div") return (b == null ? part.divTerms.slice(0, 1) : part.divTerms.slice(b, b + 1)).map((t) => t.text).join(" ");
+  if (a === "divall") return part.divTerms.map((t) => t.text).join(" ");
+  const terms = part.terms[row];
+  const slice = a == null ? terms : terms.slice(a, b + 1);
+  return slice.map((t) => t.text).join(" ");
+}
+
+/* ------------------------------------------------------------------ layout ---
+   The book's own 12.5 px type at WIDTH/526.5 px per page point, drawn at 1:1:
+   the frame is the region itself, so nothing is scaled by hand. The two parts
+   stand side by side as the answer sheet sets them — one top line, each label
+   over its own division — and are centred as a pair; a block is as wide as its
+   widest line (usually the conclusion). Callouts live in the white band under
+   the blocks, and both parts' leaders travel in the gutter between the blocks,
+   which holds no ink of either part.                                          */
+let SCENE_H = HEIGHT;
+
+function layoutParts() {
+  const rects = parts.map((p) => p.inner.getBoundingClientRect());
+  const widths = rects.map((r) => r.width);
+  const heights = rects.map((r) => r.height);
+  const totalPt = widths[0] + GAP_PT + widths[1];
+  const leftPt = (REGION_PT.w - totalPt) / 2;
+  const colsPt = [leftPt, leftPt + widths[0] + GAP_PT];
+  const lanePt = leftPt + widths[0] + GAP_PT / 2;
+  parts.forEach((p, i) => {
+    const x = colsPt[i] * PT;
+    const y = TOP_PT * PT;
+    p.el.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${PT.toFixed(4)})`;
+    p.block = { left: x, top: y, width: widths[i] * PT, height: heights[i] * PT };
+    p.corridor = lanePt * PT;
+  });
+  window.GUIDE.stack = {
+    framePt: [REGION_PT.w, REGION_PT.h],
+    atPt: REGION_AT,
+    colPt: widths.map((w) => Number(w.toFixed(1))),
+    partPt: heights.map((h) => Number(h.toFixed(1))),
+    gapPt: GAP_PT,
+    leftPt: Number(leftPt.toFixed(1)),
+    lanePt: Number(lanePt.toFixed(1)),
+    topPt: TOP_PT,
+    fit: 1,
+    typePt: 12.5,
+  };
+  window.GUIDE.fit.left = Math.round(parts[0].block.left);
+}
+
+/** How many sample points of a path land on an ink rect (the arrows' check). */
+function inkHits(points, ink) {
+  let hits = 0;
+  const pad = 2;
+  for (let i = 0; i < points.length - 1; i++) {
+    const [x0, y0] = points[i];
+    const [x1, y1] = points[i + 1];
+    const steps = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 2));
+    for (let s = 0; s <= steps; s++) {
+      const x = x0 + ((x1 - x0) * s) / steps;
+      const y = y0 + ((y1 - y0) * s) / steps;
+      if (ink.some((b) => b && x > b.left - pad && x < b.right + pad && y > b.top - pad && y < b.bottom + pad)) hits++;
+    }
+  }
+  return hits;
+}
+
+/* ---------------------------------------------------------- what it covers ---
+   A callout may lie over finished work, over the other column and over a
+   conclusion; it must never lie over the step it is talking about. Both numbers
+   are measured from the ink rects, in stage px.                              */
+function overlapArea(a, b) {
+  if (!a || !b) return 0;
+  const w = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+  const h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+  return w > 0 && h > 0 ? w * h : 0;
+}
+
+/* ------------------------------------------------------------------ overlay --- */
+function buildOverlay(part, allInk) {
+  const svg = svgEl("svg", { class: "wires", width: WIDTH, height: Math.max(HEIGHT, SCENE_H), viewBox: `0 0 ${WIDTH} ${Math.max(HEIGHT, SCENE_H)}` });
+  part.front.append(svg);
+  part.svg = svg;
+
+  const moves = MOVES[part.key];
+  const scheduled = moves.map((m, index) => ({ ...m, index, dur: durOf(m) }));
+
+  scheduled.forEach((m) => {
+    m.targets = m.at.map((spec) => ({ spec, rect: rectFor(part, spec) })).filter((t) => t.rect);
+    m.tints = m.targets.map(({ rect }) => {
+      const node = el("div", "tint");
+      Object.assign(node.style, {
+        left: `${rect.x0 - 6}px`, top: `${rect.top - 4}px`,
+        width: `${rect.x1 - rect.x0 + 12}px`, height: `${rect.bottom - rect.top + 8}px`,
+      });
+      part.behind.append(node);
+      return node;
+    });
+
+    if (m.kind === "REMARK") {
+      /* A remark is a sentence about a missing power. It names it in the same
+         box style as an operation, but it stands alone: nothing else is lit,
+         and it has no leader (the tinted term is the whole of its subject). */
+      const box = el("div", "callout remark");
+      box.innerHTML = `<div class="cl-label"><span>REMARK</span>` +
+        `<span class="cl-step">${m.index + 1} / ${scheduled.length}</span></div>` +
+        `<div class="cl-text">${esc(m.note)}</div>`;
+      part.front.append(box);
+      m.box = box;
+    } else if (m.kind !== "SUBTRACT") {
+      // MULTIPLY writes its product on a second line, as the reference does:
+      // the factor on one line, the product under it.
+      const lines = m.kind === "MULTIPLY"
+        ? [m.tex.slice(0, m.tex.lastIndexOf("=")).trim(), "=" + m.tex.slice(m.tex.lastIndexOf("=") + 1)]
+        : [m.tex];
+      const box = el("div", "callout");
+      box.innerHTML = `<div class="cl-label"><span>${m.kind === "BRINGDOWN" ? "BRING DOWN" : m.kind}</span>` +
+        `<span class="cl-step">${m.index + 1} / ${scheduled.length}</span></div>` +
+        lines.map((line) => `<div class="cl-math">${K.renderToString(`\\displaystyle ${line}`, { throwOnError: false, displayMode: false })}</div>`).join("");
+      part.front.append(box);
+      m.box = box;
+    }
+
+    if (m.kind === "SUBTRACT") {
+      // The product row is m.at[1] by construction: work, product, result.
+      const r = rectFor(part, m.at[1]);
+      const cy = r.cy;
+      m.bracket = { rect: r, nodes: [] };
+      for (const [cls, x] of [["paren", r.x0 - 15], ["paren", r.x1 + 15], ["minus", r.x0 - 46]]) {
+        const node = el("span", cls);
+        node.textContent = cls === "minus" ? "−" : x < r.x0 ? "(" : ")";
+        node.style.left = `${x}px`;
+        node.style.top = `${cy}px`;
+        node.style.transform = "translate(-50%, -50%)";
+        part.front.append(node);
+        m.bracket.nodes.push(node);
+      }
+      const pbox = m.bracket.nodes[0].getBoundingClientRect();
+      const qbox = m.bracket.nodes[1].getBoundingClientRect();
+      m.bracket.box = {
+        left: pbox.left, right: qbox.right,
+        top: Math.min(pbox.top, qbox.top), bottom: Math.max(pbox.bottom, qbox.bottom),
+      };
+    }
+
+    if (m.kind === "BRINGDOWN") {
+      const [srcRow, a, b] = m.at[0];
+      const [dstRow, c, d] = m.show[0];
+      const src = part.terms[srcRow].slice(a, b + 1);
+      const dst = part.terms[dstRow].slice(c, d + 1);
+      const g = svgEl("g", { class: "down" });
+      m.arrows = src.map((s, i) => {
+        const target = dst[i];
+        const x = (s.x0 + s.x1) / 2;
+        const y0 = s.bottom + 4;
+        const y1 = target.top + 2;   // just onto the landing term, past the subtraction rule
+        const path = svgEl("path", { d: `M ${x.toFixed(1)} ${y0.toFixed(1)} L ${x.toFixed(1)} ${y1.toFixed(1)}` });
+        const head = svgEl("path", { d: "M -5 -9 L 0 0 L 5 -9" });
+        head.setAttribute("transform", `translate(${x.toFixed(1)} ${y1.toFixed(1)})`);
+        g.append(path, head);
+        path.style.strokeDasharray = "2000";
+        path.style.strokeDashoffset = "2000";
+        head.style.opacity = "0";
+        return { path, head, len: Math.abs(y1 - y0), x, y0, y1 };
+      });
+      svg.append(g);
+      m.group = g;
+    }
+  });
+
+  /* Place each callout at the lower left of the step it belongs to. Its left
+     edge is the left edge of the beat's leftmost highlighted ink; its top sits
+     CAL_GAP_PT under the bottom of the beat's lowest row — the rows the beat
+     highlights and the row it writes. A box that would leave the frame is slid
+     back inside, and the shift is recorded for the audit; the type is never
+     shrunk to make it fit. */
+  scheduled.forEach((m) => {
+    if (!m.box) return;
+    const h = m.box.offsetHeight;
+    const w = m.box.offsetWidth;
+    m.rows = [...new Set([...m.at, ...m.show].map(([row]) => row))];
+    const targets = [...m.at, ...m.show].map((spec) => rectFor(part, spec)).filter(Boolean);
+    const leftPt = Math.min(...targets.map((r) => r.x0));
+    const bottomPt = Math.max(...m.rows.map((row) => (part.ink[row] ? part.ink[row].bottom : 0)));
+    const wantLeft = leftPt;
+    const wantTop = bottomPt + CAL_GAP_PT * PT;
+    const left = Math.round(Math.max(4, Math.min(WIDTH - 4 - w, wantLeft)));
+    // Ceil, not round: the box may only ever move DOWN from the 8 pt line, so
+    // rounding can never eat into the teacher's gap.
+    const top = Math.max(4, Math.min(HEIGHT - 4 - h, Math.ceil(wantTop)));
+    m.shift = { dx: Number((left - wantLeft).toFixed(1)), dy: Number((top - wantTop).toFixed(1)) };
+    Object.assign(m.box.style, { left: `${left}px`, top: `${top}px` });
+    m.boxRect = { left, top, w, h, bottom: top + h, right: left + w };
+    // The clearance the teacher asked for: box top to the step's own ink, in page
+    // pt. It has to stay >= CAL_GAP_PT; a box clamped back into the frame can
+    // only lose the gap, so the audit reads this number, not the constant.
+    m.gapPt = Number(((m.boxRect.top - bottomPt) / PT).toFixed(2));
+
+    // What it lies over: the beat's own rows (must be zero) and everything else.
+    const own = m.rows.map((row) => part.ink[row]).filter(Boolean);
+    m.own = { px: own.reduce((n, ink) => n + overlapArea(m.boxRect, ink), 0) };
+    m.over = allInk
+      .filter((ink) => !(ink.part === part.key && m.rows.includes(ink.row)))
+      .map((ink) => ({ part: ink.part, row: ink.row, px: Math.round(overlapArea(m.boxRect, ink)) }))
+      .filter((c) => c.px > 0);
+    m.overPx = m.over.reduce((n, c) => n + c.px, 0);
+  });
+
+  part.moves = scheduled;
+
+  /* The conclusion's own tie-ups: the sentence's quotient to the division's
+     quotient row in blue, its remainder to the last remainder in green. */
+  const unders = [...part.concl.querySelectorAll(".underline")];
+  const conclRects = unders.map((node) => {
+    const r = node.getBoundingClientRect();
+    return { x0: r.left, x1: r.right, top: r.top, bottom: r.bottom };
+  });
+  const tintOf = (rect, cls) => {
+    const node = el("div", `tint ${cls}`);
+    Object.assign(node.style, {
+      left: `${rect.x0 - 6}px`, top: `${rect.top - 4}px`,
+      width: `${rect.x1 - rect.x0 + 12}px`, height: `${rect.bottom - rect.top + 8}px`,
+    });
+    part.behind.append(node);
+    return node;
+  };
+  const lastRow = part.terms.length - 1;
+  part.tie = {
+    blue: [tintOf(conclRects[0], "blue"), tintOf(termsBox(part.terms[0]), "blue")],
+    green: [tintOf(conclRects[1], "green"), tintOf(termsBox(part.terms[lastRow]), "green")],
+    conclRects,
+  };
+}
+
+/* ------------------------------------------------------------------- build ---
+   Ink first for both parts, then the overlays: what a callout covers is measured
+   against all the ink in the frame, not only against its own part's.         */
+function measurePart(part) {
+  part.rows = rowElements(part.el);
+  part.atoms = part.rows.map(visibleAtoms);
+  part.terms = part.atoms.map(termsFromAtoms);
+  part.divTerms = divisorTerms(part.atoms[1]);
+  part.divLead = termsBox(part.divTerms.slice(0, 1));
+  part.ink = part.rows.map((row, i) => inkRectOf(row, part.atoms[i]));
+  part.atomInk = part.rows.map((row, i) => atomInkRects(row, part.atoms[i]));
+  part.inkAtoms = part.atomInk.flat();
+  // The part label is ink too, and the conclusion is ink: both are reported when
+  // a callout lies over them. The label's box spans the whole block, so measure
+  // the text with a range, not the box.
+  const hd = part.el.querySelector(".hd");
+  const range = document.createRange();
+  range.selectNodeContents(hd);
+  const hr = range.getBoundingClientRect();
+  part.labelInk = { top: hr.top + hr.height * 0.20, bottom: hr.bottom - hr.height * 0.18, left: hr.left, right: hr.right };
+  part.inkAtoms.push(part.labelInk);
+  // The conclusion is ink too: a box may lie over it, and that is reported.
+  const range2 = document.createRange();
+  range2.selectNodeContents(part.concl);
+  const crects = [...range2.getClientRects()];
+  part.conclInk = crects.length ? unionRect(crects) : null;
+}
+
+/* Every piece of ink in the frame, named by part and row, so a callout's
+   coverage can be reported: its own step's rows (must be zero) and the rest. */
+function measure() {
+  parts.forEach(measurePart);
+  const allInk = parts.flatMap((p) => [
+    ...p.ink.map((r, row) => r && { part: p.key, row, ...r }),
+    p.labelInk && { part: p.key, row: "label", ...p.labelInk },
+    p.conclInk && { part: p.key, row: "concl", ...p.conclInk },
+  ].filter(Boolean));
+  parts.forEach((part) => buildOverlay(part, allInk));
+}
+
+/* ---------------------------------------------------------------- timeline ---
+   Every move holds for one beat, 3 s (BEAT), entry and exit included: the device
+   lights at 0.62 s and is gone by 2.82 s. The last move is a SUBTRACT, then the
+   conclusion sentence lights up and the clip holds.                            */
+function applySchedule(part) {
+  let t = part.start + LEAD_IN;
+  for (const m of part.moves) { m.s = t; t += m.dur; }
+  part.lastEnd = t;
+  part.conclAt = t + 0.5;
+  part.blueAt = t + 1.2;
+  part.greenAt = t + 2.2;
+  part.end = t + 4.0;
+
+  const n = part.rows.length;
+  part.rowTime = new Array(n).fill(NEVER);
+  part.termTime = part.terms.map((ts) => new Array(ts.length).fill(NEVER));
+
+  // What is on paper when the part fades in: the dividend line, whole.
+  part.rowTime[1] = ALWAYS;
+  part.terms[1].forEach((_, k) => { part.termTime[1][k] = ALWAYS; });
+  // The quotient is written above the dividend as the divisions happen.
+  part.rowTime[0] = ALWAYS;
+
+  for (const m of part.moves) {
+    const at = m.s + LIGHT;
+    for (const [row, a, b] of m.show) {
+      if (a == null) {
+        part.rowTime[row] = at;
+        part.terms[row].forEach((_, k) => { if (part.termTime[row][k] === NEVER) part.termTime[row][k] = ALWAYS; });
+      } else {
+        if (part.rowTime[row] === NEVER) part.rowTime[row] = ALWAYS;
+        for (let k = a; k <= b; k++) part.termTime[row][k] = at;
+      }
+    }
+  }
+}
+
+/* Schedule the two parts one after the other. (a) keeps its result on screen;
+   (b) then fades in beside it, on the same top line. The beats are fixed by the
+   move list, so the length is known before anything is measured. */
+const TAIL = 4.0;
+const sumDur = (list) => list.reduce((s, m) => s + durOf(m), 0);
+const END_A = LEAD_IN + sumDur(MOVES.a) + TAIL;
+const START_B = END_A + 0.9;
+const DURATION = START_B + LEAD_IN + sumDur(MOVES.b) + TAIL;
+parts[0].start = 0;
+parts[1].start = START_B;
+
+/* ------------------------------------------------------------------ render --- */
+function alphaOf(part, t) {
+  if (part.key === "a") return 1;
+  return ease(clamp01((t - (START_B - 0.8)) / 0.5));
+}
+
+function render(t) {
+  for (const part of parts) {
+    const alpha = alphaOf(part, t);
+    part.el.style.opacity = String(alpha);
+    part.behind.style.opacity = String(alpha);
+    part.front.style.opacity = String(alpha);
+
+    part.rows.forEach((row, r) => {
+      const rt = part.rowTime[r];
+      const master = rt === NEVER ? 0 : rt === ALWAYS ? 1 : step(t, rt, 0.32);
+      row.style.opacity = String(master);
+      part.terms[r].forEach((term, k) => {
+        const tt = part.termTime[r][k];
+        const o = tt === NEVER ? 0 : tt === ALWAYS ? 1 : step(t, tt, 0.30);
+        if (term.shown !== o) {
+          term.shown = o;
+          for (const atom of term.atoms) atom.style.opacity = String(o);
+        }
+      });
+    });
+
+    for (const m of part.moves) {
+      const u = t - m.s;
+      const dev = step(u, LIGHT, 0.30) * (1 - step(u, m.dur - 0.52, 0.30));
+      for (const tint of m.tints) tint.style.opacity = String(dev);
+
+      if (m.box) {
+        const vis = step(u, 0.02, 0.24) * (1 - step(u, m.dur - 0.46, 0.28));
+        m.box.style.opacity = String(vis);
+      }
+      if (m.group) {
+        // Only the bring-down's arrows are a group now: no leader, no arrow head.
+        m.group.style.opacity = String(dev);
+      }
+      if (m.bracket) {
+        const vis = step(u, 0.25, 0.28) * (1 - step(u, m.dur - 0.50, 0.30));
+        for (const node of m.bracket.nodes) node.style.opacity = String(vis);
+      }
+      if (m.arrows) {
+        const draw = clamp01((u - LIGHT) / 0.55);
+        for (const a of m.arrows) {
+          a.path.style.strokeDashoffset = String((1 - draw) * 2000);
+          a.head.style.opacity = String(clamp01((draw - 0.92) / 0.08));
+        }
+      }
+    }
+
+    const co = step(t, part.conclAt, 0.35);
+    part.concl.style.opacity = String(co);
+    for (const node of part.tie.blue) node.style.opacity = String(step(t, part.blueAt, 0.30));
+    for (const node of part.tie.green) node.style.opacity = String(step(t, part.greenAt, 0.30));
+  }
+}
+
+/* ------------------------------------------------------------------- audit --- */
+const norm = (s) => s
+  .replace(/−/g, "-")
+  .replace(/\\left|\\right|\\,|\\;|\\!|\\div/g, "")
+  .replace(/[{}^_\s]/g, "")
+  .replace(/^\+/, "");
+/** The key pads a column it does not fill with a 0 (2x² + 0x + 3, −8x³ + 0x² − 12x). */
+const dropZero = (s) => s.replace(/[+-]0x(\d)?/g, "");
+const same = (a, b) => dropZero(norm(a)) === dropZero(norm(b));
+
+function rhsOf(tex) {
+  const at = tex.lastIndexOf("=");
+  return at >= 0 ? tex.slice(at + 1) : tex;
+}
+
+/** A term's text → [power, coefficient], or null when it is not a monomial. */
+function monomial(text) {
+  const s = text.replace(/−/g, "-").replace(/\+/g, "");
+  const m = /^([+-]?)(\d*)(?:x(\d*))?$/.exec(s);
+  if (!m) return null;
+  const coef = (m[1] === "-" ? -1 : 1) * (m[2] === "" ? 1 : Number(m[2]));
+  if (!s.includes("x") && m[2] === "") return null;
+  const power = m[3] === undefined ? 0 : m[3] === "" ? 1 : Number(m[3]);
+  return [power, coef];
+}
+
+function polyOf(terms) {
+  const p = new Map();
+  for (const t of terms) {
+    const m = monomial(t.text);
+    if (!m) return null;
+    p.set(m[0], (p.get(m[0]) || 0) + m[1]);
+  }
+  return p;
+}
+
+function subtractOk(part, m) {
+  const work = polyOf(m.at[0][1] == null ? part.terms[m.at[0][0]] : part.terms[m.at[0][0]].slice(m.at[0][1], m.at[0][2] + 1));
+  const prod = polyOf(part.terms[m.at[1][0]]);
+  const res = polyOf(m.show[0][1] == null ? part.terms[m.show[0][0]] : part.terms[m.show[0][0]].slice(m.show[0][1], m.show[0][2] + 1));
+  if (!work || !prod || !res) return false;
+  const powers = new Set([...work.keys(), ...prod.keys(), ...res.keys()]);
+  for (const p of powers) if ((work.get(p) || 0) - (prod.get(p) || 0) !== (res.get(p) || 0)) return false;
+  return true;
+}
+
+function audit() {
+  const out = [];
+  for (const part of parts) {
+    part.moves.forEach((m, i) => {
+      const targets = m.at.map((spec) => ({ spec, text: textFor(part, spec), rect: rectFor(part, spec) }));
+      const shows = m.show.map((spec) => ({ spec, text: textFor(part, spec) }));
+      let ok;
+      let check;
+      if (m.kind === "REMARK") {
+        check = m.note;
+        ok = true;
+      } else if (m.kind === "DIVIDE" || m.kind === "MULTIPLY") {
+        check = rhsOf(m.tex);
+        ok = shows.every((s) => same(s.text, check));
+      } else if (m.kind === "SUBTRACT") {
+        check = `${textFor(part, m.at[0])} − ${textFor(part, m.at[1])}`;
+        ok = subtractOk(part, m);
+      } else {
+        check = textFor(part, m.at[0]);
+        ok = shows.every((s) => same(s.text, check));
+      }
+      out.push({
+        part: part.key, move: i + 1, label: m.kind,
+        start: Number(m.s.toFixed(2)), dur: m.dur,
+        callout: m.kind === "REMARK" ? m.note : m.tex ? m.tex.replace(/[{}]/g, "").replace(/\\div/g, " ÷ ") : "—",
+        points: targets.map((t) => `${t.spec[0]} ${t.text}`).join(" + "),
+        shows: shows.map((s) => `${s.spec[0]} ${s.text}`).join(" + "),
+        check: check.replace(/[{}]/g, "").replace(/\\div/g, " ÷ "),
+        remark: m.kind === "REMARK",
+        ok,
+		// what the callout lies over, in px²: its own step (must be 0) and the rest
+        ownPx: m.own ? m.own.px : 0,
+        overPx: m.overPx ?? 0,
+        over: (m.over || []).map((c) => `${c.part}${c.row}`).join(","),
+        shift: m.shift ? [m.shift.dx, m.shift.dy] : [0, 0],
+      });
+    });
+  }
+  return out;
+}
+
+function geometry() {
+  const out = [];
+  for (const part of parts) {
+    for (const m of part.moves) {
+      const row = { part: part.key, move: m.index + 1, label: m.kind, start: Number(m.s.toFixed(2)) };
+      if (m.boxRect) {
+        const r = m.boxRect;
+        row.box = { left: Math.round(r.left), top: Math.round(r.top), right: Math.round(r.right), bottom: Math.round(r.bottom), w: Math.round(r.w), h: Math.round(r.h) };
+        row.clipped = r.left < 2 || r.top < 2 || r.right > WIDTH - 2 || r.bottom > HEIGHT - 2;
+        // The step it belongs to: its own rows' ink. Never allowed to overlap.
+        row.rows = m.rows || [];
+        row.ownPx = Math.round(m.own ? m.own.px : 0);
+        // The gap between the box's top and the bottom of the step's own ink.
+        row.gapPt = m.gapPt;
+        // Everything else it lies over is allowed, and reported.
+        row.overPx = Math.round(m.overPx ?? 0);
+        row.over = m.over || [];
+        row.shift = m.shift || { dx: 0, dy: 0 };
+        row.leaders = 0;
+      }
+      if (m.bracket) {
+        const b = m.bracket.box;
+        row.bracket = { left: Math.round(b.left), right: Math.round(b.right), top: Math.round(b.top), bottom: Math.round(b.bottom) };
+        // the two parens and the red minus must not touch another row's ink
+        const own = new Set([m.at[1][0]]);
+        let hits = 0;
+        for (let k = 0; k < part.ink.length; k++) {
+          if (own.has(k) || !part.ink[k]) continue;
+          const ink = part.ink[k];
+          if (b.left < ink.right && b.right > ink.left && b.top < ink.bottom && b.bottom > ink.top) hits++;
+        }
+        row.crossings = hits;
+        row.clipped = b.left < 0 || b.right > WIDTH || b.top < 0 || b.bottom > SCENE_H;
+      }
+      if (m.arrows) {
+        // The arrow starts under the dividend's term and ends above the landing
+        // term, so those two rows are its endpoints; what must stay clear is
+        // every row in between.
+        const skip = new Set([m.at[0][0], m.show[0][0]]);
+        const between = part.atomInk.filter((r, k) => !skip.has(k)).flat();
+        const glyphs = between.filter((r) => !r.bar);
+        const rules = between.filter((r) => r.bar);
+        row.arrowHits = m.arrows.reduce((n, a) => n + inkHits([[a.x, a.y0], [a.x, a.y1]], glyphs), 0);
+        row.arrowRules = m.arrows.reduce((n, a) => n + inkHits([[a.x, a.y0], [a.x, a.y1]], rules), 0);
+        row.arrows = m.arrows.map((a) => ({ x: Math.round(a.x), y0: Math.round(a.y0), y1: Math.round(a.y1) }));
+      }
+      out.push(row);
+    }
+  }
+  return out;
+}
+
+/* -------------------------------------------------------------------- boot --- */
+const ready = document.fonts.ready.then(() => {
+  layoutParts();
+  measure();
+  applySchedule(parts[0]);
+  applySchedule(parts[1]);
+  render(0);
+  return true;
+});
+
+window.GUIDE = {
+  width: WIDTH, height: HEIGHT, fps: FPS, duration: DURATION,
+  ready, render, audit, geometry,
+  frameCount: Math.round(DURATION * FPS),
+  // `left` is filled in by layoutParts, once the blocks have been measured.
+  fit: { scale: PT, left: 0 },
+  columns: () => parts.map((p) => ({
+    leftPt: Number((p.block.left / PT).toFixed(2)), topPt: Number((p.block.top / PT).toFixed(2)),
+    widthPt: Number((p.block.width / PT).toFixed(2)), heightPt: Number((p.block.height / PT).toFixed(2)),
+  })),
+  terms: () => parts.map((p) => p.terms.map((row) => row.map((t) => ({ text: t.text, x0: Math.round(t.x0), x1: Math.round(t.x1) })))),
+  inkRects: () => parts.map((p) => p.ink),
+  labels: () => parts.map((p) => p.labelInk),
+  leaders: () => [],
+};
+window.GUIDE.ready.then(() => {
+  window.GUIDE.auditRows = audit();
+  window.GUIDE.geoRows = geometry();
+});
+</script>
+</body>
+</html>
+

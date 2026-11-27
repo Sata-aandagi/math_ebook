@@ -402,9 +402,6 @@
       "q23": {
         "space": 180
       },
-      "p1": {
-        "space": 110
-      },
       "q1": {
         "space": 85
       },
@@ -454,5 +451,25 @@
         "space": 8
       }
     }
-  }
+  },
+  "media": [
+    {
+      "page": 2,
+      "region": [
+        36.5,
+        516.5,
+        563,
+        785.2
+      ],
+      "src": "media/guide-p1.mp4",
+      "poster": "media/guide-p1.jpg",
+      "title": "Play the solution of Practice 1",
+      "scrub": {
+        "left": 386,
+        "width": 120,
+        "top": 247,
+        "height": 14
+      }
+    }
+  ]
 }

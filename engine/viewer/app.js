@@ -1,4 +1,4 @@
-import { BOOK, BOOK_DIR, BOOK_ID, BOOK_NAME, STORAGE, SOLUTION_BY_ID, mountGraphic, pageImage } from "../book.js";
+import { BOOK, BOOK_DIR, BOOK_ID, BOOK_NAME, DATA_VERSION, STORAGE, SOLUTION_BY_ID, fetchWithFallback, loadImage, mountGraphic, pageImage } from "../book.js";
 import { createInk } from "../ink/ink.js";
 import { exportAnnotations, exportPdf } from "../export/export.js";
 import {
@@ -197,12 +197,20 @@ function makeSheet(key, n, thumb, height = PAGE_H) {
   return sheet;
 }
 
+/* A page image that fails on both the versioned and the plain url leaves a
+   visible note in its sheet: the reader must never be left with a blank beige
+   page and no idea why (teacher, 2026-11-27). */
 function pageBackground(src) {
   const img = document.createElement("img");
   img.className = "bg";
   img.alt = "";
   img.draggable = false;
-  img.src = src;
+  loadImage(img, src, (node) => {
+    const note = document.createElement("div");
+    note.className = "bg-error";
+    note.textContent = "page image failed — reload";
+    node.after(note);
+  });
   return img;
 }
 
@@ -990,7 +998,7 @@ function buildThumbs() {
     let face;
     if (sheet.dataset.thumb) {
       face = document.createElement("img");
-      face.src = sheet.dataset.thumb;
+      loadImage(face, sheet.dataset.thumb);
       face.alt = sheet.dataset.label || `Page ${name}`;
     } else {
       face = document.createElement("div");
@@ -1304,7 +1312,11 @@ async function main() {
   // A phone has no room beside the page, so the drawing tools start tucked away there.
   setToolsCollapsed(prefs.toolsCollapsed ?? window.innerWidth < 700, true);
   setBarCollapsed(prefs.barCollapsed === true, true);
-  state.layout = await fetch(`${BOOK_DIR}layout.json`).then((r) => r.json());
+  /* The release this reader is actually running, beside the page number: "v73",
+     or "v?" when sw.js could not be read (offline, or a stale engine). */
+  const build = document.getElementById("build");
+  if (build) build.textContent = DATA_VERSION ? DATA_VERSION.replace(/^ebooks-/, "") : "v?";
+  state.layout = await fetchWithFallback(`${BOOK_DIR}layout.json`).then((r) => r.json());
   placeChrome();
   buildPages();
   buildJump();

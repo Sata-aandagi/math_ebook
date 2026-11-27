@@ -1,0 +1,296 @@
+{
+  "id": "sm05b",
+  "form": "S5",
+  "code": "SM05 (B)",
+  "title": "More about Polynomials",
+  "topic": "More about Polynomials",
+  "year": 2026,
+  "status": "live",
+  "storage": "sm05b",
+  "widgets": false,
+  "source": {
+    "que": "source/SM05 (B) More about Polynomials (2026) (QUE).pdf",
+    "ans": "source/SM05 (B) More about Polynomials (2026) (ANS).pdf",
+    "ansPageOffset": -1
+  },
+  "sections": [
+    {
+      "id": "ft",
+      "label": "Factor theorem"
+    },
+    {
+      "id": "ch",
+      "label": "Challenge"
+    },
+    {
+      "id": "sf",
+      "label": "Solve f(x) = 0"
+    }
+  ],
+  "continuation": {
+    "top": 96,
+    "x": 48,
+    "width": 499,
+    "bottom": 812
+  },
+  "extract": {
+    "zoom": 3,
+    "regionX": [
+      66,
+      546
+    ],
+    "footer": 786,
+    "questions": [
+      {
+        "id": "p1",
+        "page": 3,
+        "label": "Practice 1",
+        "section": "ft"
+      },
+      {
+        "id": "p2",
+        "page": 3,
+        "label": "Practice 2",
+        "section": "ft"
+      },
+      {
+        "id": "q1",
+        "page": 3,
+        "label": "1",
+        "section": "ft"
+      },
+      {
+        "id": "q2",
+        "page": 4,
+        "label": "2",
+        "section": "ft"
+      },
+      {
+        "id": "q3",
+        "page": 4,
+        "label": "3",
+        "section": "ft"
+      },
+      {
+        "id": "q4",
+        "page": 4,
+        "label": "4",
+        "section": "ft"
+      },
+      {
+        "id": "q5",
+        "page": 4,
+        "label": "5",
+        "section": "ft"
+      },
+      {
+        "id": "q6",
+        "page": 5,
+        "label": "6",
+        "section": "ft"
+      },
+      {
+        "id": "q7",
+        "page": 5,
+        "label": "7",
+        "section": "ft"
+      },
+      {
+        "id": "q8",
+        "page": 5,
+        "label": "8",
+        "section": "ft"
+      },
+      {
+        "id": "q9",
+        "page": 6,
+        "label": "9",
+        "section": "ft"
+      },
+      {
+        "id": "q10",
+        "page": 6,
+        "label": "10",
+        "section": "ft"
+      },
+      {
+        "id": "q11",
+        "page": 7,
+        "label": "11",
+        "section": "ft"
+      },
+      {
+        "id": "q12",
+        "page": 7,
+        "label": "12",
+        "section": "ft"
+      },
+      {
+        "id": "q13",
+        "page": 7,
+        "label": "13",
+        "section": "ft"
+      },
+      {
+        "id": "q14",
+        "page": 8,
+        "label": "14",
+        "section": "ch"
+      },
+      {
+        "id": "p2b",
+        "page": 10,
+        "label": "Practice 2",
+        "section": "sf"
+      },
+      {
+        "id": "q15",
+        "page": 11,
+        "label": "15",
+        "section": "sf"
+      },
+      {
+        "id": "q16",
+        "page": 12,
+        "label": "16",
+        "section": "sf"
+      },
+      {
+        "id": "q17",
+        "page": 13,
+        "label": "17",
+        "section": "sf"
+      },
+      {
+        "id": "q18",
+        "page": 14,
+        "label": "18",
+        "section": "sf"
+      },
+      {
+        "id": "q19",
+        "page": 15,
+        "label": "19",
+        "section": "sf"
+      },
+      {
+        "id": "q20",
+        "page": 16,
+        "label": "20",
+        "section": "sf"
+      }
+    ],
+    "anchors": {
+      "p1": "Practice\\s*1:",
+      "p2": "Practice\\s*2:",
+      "p2b": "Practice\\s*2:"
+    },
+    "fixedAnchors": {},
+    "overrides": {
+      "q1": {
+        "region": [
+          140,
+          630,
+          512,
+          782
+        ],
+        "space": 90
+      },
+      "q5": {
+        "region": [
+          140,
+          585,
+          512,
+          782
+        ],
+        "square": [
+          525.7,
+          710.7,
+          551.8,
+          736.8
+        ],
+        "space": 40
+      },
+      "q6": {
+        "region": [
+          140,
+          95,
+          512,
+          282
+        ],
+        "square": [
+          525.7,
+          222.5,
+          551.8,
+          248.5
+        ],
+        "space": 50
+      },
+      "q7": {
+        "region": [
+          140,
+          330,
+          512,
+          490
+        ],
+        "square": [
+          525.7,
+          438.5,
+          551.8,
+          464.5
+        ]
+      },
+      "q3": {
+        "space": 32
+      },
+      "q4": {
+        "space": 50
+      },
+      "q8": {
+        "space": 115
+      },
+      "q9": {
+        "space": 212
+      },
+      "q10": {
+        "space": 221
+      },
+      "q11": {
+        "space": 200
+      },
+      "q12": {
+        "space": 150
+      },
+      "q14": {
+        "space": 312
+      },
+      "q19": {
+        "space": 129
+      },
+      "q13": {
+        "space": 196
+      },
+      "p2b": {
+        "region": [
+          66,
+          192,
+          546,
+          782
+        ],
+        "space": 40
+      },
+      "q15": {
+        "space": 20
+      },
+      "q16": {
+        "space": 6
+      },
+      "q18": {
+        "space": 28
+      },
+      "q2": {
+        "space": 12
+      }
+    }
+  }
+}

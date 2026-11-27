@@ -1,4 +1,4 @@
-import { BOOK_DIR, GUIDE_BY_ID } from "../book.js";
+import { BOOK_DIR, GUIDE_BY_ID, loadVideo } from "../book.js";
 
 /**
  * Solution guides: the question's figure animated step by step, following the
@@ -136,8 +136,7 @@ export function openGuide(id, label) {
   v.setAttribute("aria-label", `Animated solution guide for ${label}`);
   if (v.dataset.src !== guide.src) {
     v.dataset.src = guide.src;
-    v.poster = BOOK_DIR + guide.poster;
-    v.src = BOOK_DIR + guide.src;
+    loadVideo(v, BOOK_DIR + guide.src, BOOK_DIR + guide.poster);
   } else {
     v.currentTime = 0;
   }

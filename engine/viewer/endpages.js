@@ -1,4 +1,4 @@
-import { BOOK, BOOK_DIR, BOOK_ID, STORAGE } from "../book.js";
+import { BOOK, BOOK_DIR, BOOK_ID, STORAGE, importWithFallback } from "../book.js";
 
 /** Landscape slide at the notes' width (595 × 380 pt), so presentation mode shows the whole card. */
 export const DECK_H = 380;
@@ -23,7 +23,7 @@ export async function mountEndPage(item, overlay) {
   try {
     const [{ mountDeck }, mod] = await Promise.all([
       import("../deck/deck.js"),
-      import(new URL(`../../books/${BOOK_ID}/${item.deck}`, import.meta.url).href),
+      importWithFallback(new URL(`../../books/${BOOK_ID}/${item.deck}`, import.meta.url).href),
     ]);
     mountDeck(overlay, mod.DECK, `${STORAGE}-deck-${item.key}`);
   } catch (err) {

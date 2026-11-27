@@ -280,26 +280,35 @@ const Q7DIV = (() => {
   return raw`\begin{array}{l}${lines.join(" \\\\ ")}\end{array}`;
 })();
 
+/* Practice 1's answer tex, used only by the guide stage in media/guide-p1.html.
+   It is deliberately NOT part of SOLUTIONS: the page shows the inline animation,
+   and no reader — not even one running a stale cached solutions.js — may draw a
+   typed answer behind it. */
+export const P1_STEPS = [
+  {
+    steps: align([
+      h("(a)"),
+      m(DIV(raw`x-3`, P1A)),
+      t(raw`$\therefore$ Quotient $= \underline{4x^2+4x+3}$, Remainder $= \underline{37}$.`),
+    ]),
+  },
+  {
+    steps: align([
+      h("(b)"),
+      m(DIV(raw`2x^{2}+0x+3`, P1B)),
+      t(raw`$\therefore$ Quotient $= \underline{-4x+3}$, Remainder $= \underline{22x-4}$.`),
+    ]),
+  },
+];
+
 export const SOLUTIONS = [
   /* ---------------------------------------------------------------- Practice 1 */
   {
     id: "p1",
-    boxes: [
-      {
-        steps: align([
-          h("(a)"),
-          m(DIV(raw`x-3`, P1A)),
-          t(raw`$\therefore$ Quotient $= \underline{4x^2+4x+3}$, Remainder $= \underline{37}$.`),
-        ]),
-      },
-      {
-        steps: align([
-          h("(b)"),
-          m(DIV(raw`2x^{2}+0x+3`, P1B)),
-          t(raw`$\therefore$ Quotient $= \underline{-4x+3}$, Remainder $= \underline{22x-4}$.`),
-        ]),
-      },
-    ],
+    // The answer is the inline animation in book.json "media". The tex lives in
+    // P1_STEPS above and is not part of this list: there is nothing to draw here.
+    printed: true,
+    boxes: [],
   },
 
   /* ---------------------------------------------------------------- Q1 */

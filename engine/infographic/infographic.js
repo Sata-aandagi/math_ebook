@@ -1,4 +1,4 @@
-import { BOOK, BOOK_ID } from "../book.js";
+import { BOOK, BOOK_ID, versioned } from "../book.js";
 import { render } from "./kit.js";
 
 /**
@@ -16,7 +16,7 @@ document.head.append(css);
 let BOARDS = {};
 if (BOOK.infographics) {
   try {
-    const mod = await import(new URL(`../../books/${BOOK_ID}/infographics.js`, import.meta.url).href);
+    const mod = await import(versioned(new URL(`../../books/${BOOK_ID}/infographics.js`, import.meta.url).href));
     BOARDS = mod.INFOGRAPHICS || {};
   } catch (err) {
     console.warn("Infographics failed to load", err);

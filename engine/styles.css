@@ -85,6 +85,9 @@ button:disabled { opacity: 0.5; }
 .sections, .pager, .top-actions { display: flex; gap: 6px; align-items: center; }
 .top-actions { margin-left: auto; }
 #page-label { min-width: 92px; text-align: center; font-size: var(--fs-md); font-variant-numeric: tabular-nums; }
+/* The release the reader is running (engine/book.js DATA_VERSION → "v73"), so a
+   stale engine is visible at a glance: no button, no tooltip, 10 px muted. */
+#build { font-size: 10px; color: rgba(255, 255, 255, 0.6); font-variant-numeric: tabular-nums; }
 
 /* Buttons that belong together share one rounded pill. */
 .topbar .group { display: flex; gap: 1px; border-radius: 10px; overflow: hidden; flex: none; }
@@ -162,6 +165,21 @@ body[data-mode="laser"] #viewport { cursor: crosshair; }
 }
 .sheet .bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .sheet .bg[hidden] { display: none; }
+/* A page image that failed on both its versioned and its plain url says so
+   instead of leaving a blank beige sheet with no explanation. */
+.sheet .bg-error {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(170, 40, 40, 0.4);
+  color: #a02a2a;
+  font: 600 15px/1.4 var(--font-ui, "Segoe UI", Arial, sans-serif);
+  pointer-events: none;
+}
 .bg-slice { position: absolute; left: 0; width: 100%; overflow: hidden; pointer-events: none; }
 .bg-slice img { position: absolute; left: 0; width: 595.32px; height: 841.92px; }
 /* Ink is saved in the 100% page's points; it waits on a page opened up for a larger answer size. */
@@ -173,11 +191,16 @@ body[data-mode="laser"] #viewport { cursor: crosshair; }
 /* ---------- animated summary panels ---------- */
 
 .media { position: absolute; background: #fff; pointer-events: none; }
-.media video { display: block; width: 100%; height: 100%; object-fit: fill; background: #fff; }
+/* The video is a compositing layer of its own in some browsers; an explicit
+   z-index: 0 keeps it in the panel's own stacking context so the controls
+   below can be painted above it (they used not to be, on one teacher's
+   machine — the scrubber was there and invisible). */
+.media video { display: block; width: 100%; height: 100%; object-fit: fill; background: #fff; position: relative; z-index: 0; }
 /* Sits on the panel's top-right corner so it never covers the panel's own labels;
    media.js moves it in when that corner is close to the page edge. */
 .media-play {
   position: absolute;
+  z-index: 6;
   right: -12px;
   top: -12px;
   width: 24px;
@@ -195,6 +218,59 @@ body[data-mode="laser"] #viewport { cursor: crosshair; }
   cursor: pointer;
 }
 .media.playing .media-play { opacity: 0.6; }
+/* The scrubber is the panel's one interactive strip; media.js places it where
+   the book keeps its clip empty (a corner), so the rest of the panel stays a
+   pointer-events: none window for the pen.
+   It is opaque on purpose: a pale 3 px track on white disappears on some
+   screens and scales, so the strip carries its own solid pill, a darker track
+   and an orange thumb, and it sits above the video (z-index 5, play 6). */
+.media-scrub {
+  position: absolute;
+  z-index: 5;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 6px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 7px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  pointer-events: auto;
+  touch-action: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.media-scrub::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(17, 17, 17, 0.38);
+}
+.media-scrub::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #f0a030;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.media-scrub::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(17, 17, 17, 0.38);
+}
+.media-scrub::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #f0a030;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.media-scrub:focus-visible { outline: 2px solid #f0a030; outline-offset: 2px; }
 
 /* ---------- answer regions and boxes ---------- */
 
